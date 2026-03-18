@@ -14,8 +14,14 @@ func getMessages(w http.ResponseWriter, r *http.Request) {
 }
 
 func postMessage(w http.ResponseWriter, r *http.Request) {
-	resp, _ := http.Post(ChatApi+"/messages", "application/json", r.Body)
+	resp, err := http.Post(ChatApi+"/messages", "application/json", r.Body)
+	if err != nil {
+		http.Error(w, "Error sending request", http.StatusInternalServerError)
+		return
+	}
 	defer resp.Body.Close()
+
+	io.Copy(w, resp.Body)
 
 	io.Copy(w, resp.Body)
 }
