@@ -3,7 +3,6 @@ const MAX_LENGTH = 140
 const getMessages = async () => {
     const chat = document.getElementById("chat")
 
-    // 👇 guardar posición de scroll
     const isAtBottom = chat.scrollTop + chat.clientHeight >= chat.scrollHeight - 5
 
     const response = await fetch("/api/messages")
@@ -18,11 +17,21 @@ const getMessages = async () => {
 
         let content = message.text
 
-        // 🖼️ detectar links de imagen
+        // imagen directa
         if (isImageURL(content)) {
             content = `
                 <div>${message.text}</div>
                 <img src="${message.text}" style="max-width:200px; border-radius:8px; margin-top:5px;">
+            `
+        }
+        // link normal
+        else if (isURL(content)) {
+            content = `
+                <div style="border:1px solid #334155; padding:8px; border-radius:8px; margin-top:5px;">
+                    <a href="${message.text}" target="_blank" style="color:#38bdf8;">
+                        ${message.text}
+                    </a>
+                </div>
             `
         }
 
@@ -30,7 +39,6 @@ const getMessages = async () => {
         chat.appendChild(li)
     }
 
-    // 👇 mantener scroll solo si ya estaba abajo
     if (isAtBottom) {
         scrollToBottom()
     }
@@ -47,10 +55,10 @@ const postMessages = async (message) => {
 
 getMessages()
 
-// 📌 botón enviar
+// botón enviar
 document.querySelector("button").addEventListener('click', send)
 
-// ⌨️ enviar con Enter
+// enviar con Enter
 document.getElementById("message").addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault()
@@ -62,8 +70,8 @@ function send() {
     const input = document.getElementById('message')
     let text = input.value.trim()
 
-    // ✂️ límite de caracteres
     if (text.length === 0) return
+
     if (text.length > MAX_LENGTH) {
         alert("Máximo 140 caracteres")
         return
@@ -77,16 +85,26 @@ function send() {
     input.value = ''
 }
 
-// 🔁 auto-refresh cada 3 segundos
+// auto-refresh cada 3 segundos
 setInterval(getMessages, 3000)
 
-// 🔽 scroll
+// scroll
 function scrollToBottom() {
     const chat = document.getElementById("chat")
     chat.scrollTop = chat.scrollHeight
 }
 
-// 🧠 detectar imágenes
+// detectar imágenes
 function isImageURL(url) {
-    return url.match(/\.(jpeg|jpg|gif|png|webp)$/) != null
+    return url.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null
+}
+
+// detectar URLs válidas
+function isURL(text) {
+    try {
+        new URL(text)
+        return true
+    } catch {
+        return false
+    }
 }
